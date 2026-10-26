@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { checkGuildAccess, getAuthSession, getGuilds, logoutFromDashboard } from './lib/api.js';
 import { resolveRoute } from './lib/routes.js';
 import { translations } from './i18n.js';
+import { ContentSkeleton, FullPageSkeleton } from './components/LoadingSkeleton.jsx';
 
 const LandingPage = lazy(() => import('./components/LandingPage.jsx'));
 const PublicInfoPage = lazy(() => import('./components/PublicInfoPage.jsx'));
@@ -17,7 +18,7 @@ const AdminControlPage = lazy(() => import('./components/AdminControlPage.jsx'))
 
 function PageLoading() {
   const isArabic = document.documentElement.lang === 'ar';
-  return <main className="page-loading" role="status" aria-busy="true">{isArabic ? 'جارٍ تحميل Argus…' : 'Loading Argus…'}</main>;
+  return <FullPageSkeleton language={isArabic ? 'ar' : 'en'} />;
 }
 
 function DashboardApp() {
@@ -199,10 +200,12 @@ function DashboardApp() {
   }, [navigate]);
 
   if (route.name === 'landing') {
-    return <LandingPage language={language} onLanguageToggle={changeLanguage} onLogin={() => navigate('/login')} />;
+    return <LandingPage language={language} authenticated={auth.status === 'authenticated'} onLanguageToggle={changeLanguage}
+      onLogin={() => navigate(auth.status === 'authenticated' ? '/guilds' : '/login')} />;
   }
   if (route.name === 'public-page') {
-    return <PublicInfoPage page={route.page} language={language} onLanguageToggle={changeLanguage} onLogin={() => navigate('/login')} />;
+    return <PublicInfoPage page={route.page} language={language} authenticated={auth.status === 'authenticated'}
+      onLanguageToggle={changeLanguage} onLogin={() => navigate(auth.status === 'authenticated' ? '/guilds' : '/login')} />;
   }
 
   if (route.name === 'guilds' && auth.status === 'authenticated') {
@@ -214,6 +217,12 @@ function DashboardApp() {
 
   const defaultAccessStatus = auth.status === 'unavailable' ? 'error' : auth.status === 'unauthenticated' ? 'unauthenticated' : 'loading';
   const accessForRoute = guildAccess.guildId === route.guildId ? guildAccess : { status: defaultAccessStatus, guildId: route.guildId, guild: null };
+  if (auth.status === 'checking' && ['login', 'guilds', 'guild', 'guild-page', 'admin-health', 'admin-control'].includes(route.name)) {
+    return <FullPageSkeleton language={language} />;
+  }
+  if (isGuildRoute && accessForRoute.status === 'loading') {
+    return <FullPageSkeleton language={language} />;
+  }
   if (isGuildRoute && accessForRoute.status === 'authorized' && (!route.page || route.page === 'overview')) {
     return <GuildOverviewPage key={route.guildId} t={translations[language]} language={language} guild={accessForRoute.guild} user={auth.user} siteAdmin={auth.siteAdmin} onNavigate={navigate} onSwitchServer={() => navigate('/guilds')} onSignOut={signOut} authBusy={authBusy} onLanguageToggle={changeLanguage} onSessionExpired={expireSession} />;
   }

@@ -2,6 +2,7 @@ import { Activity, ArrowUpRight, Building2, LogOut, RefreshCw } from 'lucide-rea
 import { getDashboardCopy } from '../dashboardCopy.js';
 import ArgusMark from './ArgusMark.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import { ContentSkeleton } from './LoadingSkeleton.jsx';
 
 const copy = {
   en: {
@@ -45,7 +46,7 @@ export default function GuildSelectionPage({ language, user, state, authBusy, si
         <h1 id="guild-selection-title">{t.title}</h1>
         <p className="guild-selection-description">{t.description}</p>
 
-        {state.status === 'loading' && <p className="guild-state" role="status">{t.loading}</p>}
+        {state.status === 'loading' && <ContentSkeleton variant="cards" label={t.loading} />}
         {state.status === 'empty' && <div className="guild-state"><h2>{t.emptyTitle}</h2><p>{t.empty}</p></div>}
         {state.status === 'error' && (
           <div className="guild-state"><h2>{t.failedTitle}</h2><p>{t.failed}</p><button className="route-home-link" type="button" onClick={onRetry}><RefreshCw size={14} aria-hidden="true" />{t.retry}</button></div>

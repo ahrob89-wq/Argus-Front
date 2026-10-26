@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Archive, Check, ChevronDown, LogOut, Menu, Pencil, RefreshCw, Shield, ShieldAlert, X } from 'lucide-react';
 import AppSidebar from './AppSidebar.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import { ContentSkeleton } from './LoadingSkeleton.jsx';
 import { getGuildBackups, getGuildSettings, postGuildAction } from '../lib/api.js';
 import { formatDashboardTimestamp } from '../lib/formatters.js';
 
@@ -678,7 +679,7 @@ export default function GuildReadOnlyPage({ page, t, language, guild, user, site
         <main className="page-content live-read-page">
           <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" />ARGUS WORKSPACE</div><h1>{title}</h1><p>{guild.name} · {page === 'settings' ? t.settingsSubtitle : t.backupsSubtitle}</p></div><div className="heading-actions"><span className="connection-badge"><span className="status-indicator muted" />{page === 'settings' ? t.settingsConfiguration : t.available}</span><button className="refresh-button" type="button" onClick={refresh} disabled={loading} aria-label={t.refreshPage}><RefreshCw size={15} className={loading ? 'spin' : ''} /><span>{t.refreshPage}</span></button></div></div>
 
-          {state === 'loading' && <p className="live-loading-state" role="status">{t.loadingPage(title)}</p>}
+          {state === 'loading' && <ContentSkeleton variant={page === 'backups' ? 'list' : 'panel'} label={t.loadingPage(title)} />}
           {state === 'loading-page' && <p className="live-stale-state" role="status">{t.refreshingPage}</p>}
           {state === 'error' && <div className="live-error-state" role="alert"><p>{t.pageUnavailable}</p><button className="tracking-reset-button" type="button" onClick={refresh}>{t.retry}</button></div>}
           {state === 'page-error' && <div className="live-stale-state" role="status"><p>{page === 'backups' ? t.backupPageUnavailable : t.staleData}</p><button className="tracking-reset-button" type="button" onClick={refresh}>{t.retry}</button></div>}

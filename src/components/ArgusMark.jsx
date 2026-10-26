@@ -24,7 +24,7 @@ export default function ArgusMark({ size = 21 }) {
         fontWeight="800"
         letterSpacing=".15"
       >
-        MVP
+        V.1
       </text>
     </svg>
   );

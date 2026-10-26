@@ -78,7 +78,7 @@ function displayDate(value, language, fallback) {
   }).format(new Date(value));
 }
 
-function MemberCard({ member, actorId, capabilities, copy, selectedAction, onSelectAction, onCopy, copiedId, busy, actionError, actionState, reason, setReason, durationHours, setDurationHours, onSubmitAction, onCancelAction }) {
+function MemberCard({ member, actorId, capabilities, copy, language, selectedAction, onSelectAction, onCopy, copiedId, busy, actionError, actionState, reason, setReason, durationHours, setDurationHours, onSubmitAction, onCancelAction }) {
   const timedOut = member.timedOutUntil && Date.parse(member.timedOutUntil) > Date.now();
   const selected = selectedAction?.memberId === member.id ? selectedAction.action : null;
   const actionTitle = selected === 'kick' ? copy.kick : selected === 'timeout' ? copy.timeout : copy.release;
@@ -332,7 +332,7 @@ export default function GuildMembersPage({ t, language, guild, user, siteAdmin, 
                 <div className="tracking-empty panel"><UsersRound size={21} aria-hidden="true" /><h2>{search || roleId ? copy.noMatches : copy.noMembers}</h2><p>{search || roleId ? copy.noMatches : copy.noMembersDescription}</p></div>
               ) : (
                 <section className="members-list" aria-label={copy.listLabel}>
-                  {members.map((member) => <MemberCard key={member.id} member={member} actorId={user?.id} capabilities={result?.capabilities || {}} copy={copy} selectedAction={selectedAction} onSelectAction={(item, action) => { setSelectedAction({ memberId: item.id, action }); setActionState(null); setReason(''); }} onCopy={onCopy} copiedId={copiedId} busy={actionState?.status === 'pending'} actionError={actionState?.memberId === member.id ? actionState.error : null} actionState={actionState} reason={reason} setReason={setReason} durationHours={durationHours} setDurationHours={setDurationHours} onSubmitAction={onSubmitAction} onCancelAction={() => { setSelectedAction(null); setActionState(null); setReason(''); }} />)}
+                  {members.map((member) => <MemberCard key={member.id} member={member} actorId={user?.id} capabilities={result?.capabilities || {}} copy={copy} language={language} selectedAction={selectedAction} onSelectAction={(item, action) => { setSelectedAction({ memberId: item.id, action }); setActionState(null); setReason(''); }} onCopy={onCopy} copiedId={copiedId} busy={actionState?.status === 'pending'} actionError={actionState?.memberId === member.id ? actionState.error : null} actionState={actionState} reason={reason} setReason={setReason} durationHours={durationHours} setDurationHours={setDurationHours} onSubmitAction={onSubmitAction} onCancelAction={() => { setSelectedAction(null); setActionState(null); setReason(''); }} />)}
                 </section>
               )}
               {(currentPage > 1 || result?.hasMore) && <nav className="tracking-pagination" aria-label={copy.listLabel}><button type="button" className="tracking-reset-button" disabled={currentPage <= 1 || showLoading} onClick={() => { setPageCursors((values) => values.slice(0, -1)); setResult(null); }}><ChevronLeft size={14} aria-hidden="true" />{copy.previous}</button><span>{copy.page(currentPage)}</span><button type="button" className="tracking-reset-button" disabled={!result?.hasMore || !result.nextCursor || showLoading} onClick={() => { if (result.nextCursor) setPageCursors((values) => [...values, result.nextCursor]); setResult(null); }}>{copy.next}<ChevronRight size={14} aria-hidden="true" /></button></nav>}

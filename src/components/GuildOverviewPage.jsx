@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Activity, AlertTriangle, Check, CircleAlert, Gauge, LogOut, Menu, Shield, ShieldAlert, Users } from 'lucide-react';
+import { Activity, AlertTriangle, Archive, Check, CircleAlert, Gauge, Link2, LogOut, Menu, Shield, ShieldAlert, Users } from 'lucide-react';
 import AppSidebar from './AppSidebar.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import { ContentSkeleton } from './LoadingSkeleton.jsx';
@@ -13,6 +13,7 @@ function statusText(status, t) {
   if (status === true || status === 'connected' || status === 'available') return t.connected;
   if (status === false || status === 'disabled') return t.disabled;
   if (status === 'enabled') return t.enabled;
+  if (status === 'on_demand') return t.onDemand;
   if (status === 'unavailable') return t.unavailable;
   if (status === 'checking') return t.connecting;
   return t.runtimeUnknown;
@@ -21,6 +22,7 @@ function statusText(status, t) {
 function statusTone(status) {
   if (status === true || status === 'connected' || status === 'available' || status === 'enabled') return 'green';
   if (status === false || status === 'disabled' || status === 'unavailable') return 'amber';
+  if (status === 'on_demand') return 'blue';
   return 'blue';
 }
 
@@ -56,13 +58,37 @@ function StatusRow({ icon: Icon, label, detail, status, t }) {
   );
 }
 
-function ProtectionPanel({ protection, t }) {
+function featureStatus(enabled, protection, botStatus) {
+  if (protection?.guildEnabled === false || protection?.maintenanceMode === true || enabled === false) return 'disabled';
+  if (enabled !== true) return 'runtime_unknown';
+  if (botStatus === 'offline') return 'unavailable';
+  return botStatus === 'online' ? 'enabled' : 'runtime_unknown';
+}
+
+function featureDetail(enabled, protection, botStatus, detail, t) {
+  if (protection?.maintenanceMode === true) return t.maintenanceDetail;
+  if (protection?.guildEnabled === false) return t.serverBotDisabledDetail;
+  if (enabled === false) return t.featureDisabledDetail;
+  if (enabled !== true) return t.controlUnknownDetail;
+  if (botStatus === 'offline') return t.botOffline;
+  if (botStatus !== 'online') return t.controlUnknownDetail;
+  return detail;
+}
+
+function ProtectionPanel({ protection, botStatus, t }) {
+  const serverStatus = protection?.maintenanceMode === true || protection?.guildEnabled === false
+    ? 'disabled'
+    : botStatus === 'offline' ? 'unavailable' : botStatus === 'online' ? 'enabled' : 'runtime_unknown';
+  const backupStatus = featureStatus(protection?.backupsEnabled, protection, botStatus);
   return (
     <section className="panel posture-panel live-posture-panel" aria-labelledby="live-posture-heading">
       <div className="panel-heading"><div><h2 id="live-posture-heading">{t.posture}</h2><p>{t.protection}</p></div><ShieldAlert size={17} className="live-panel-icon" aria-hidden="true" /></div>
       <ul className="posture-list">
-        <StatusRow icon={ShieldAlert} label={t.antiNukeStatus} detail={t.antinukeDetail} status={protection?.antiNukeEnabled} t={t} />
-        <StatusRow icon={Gauge} label={t.raidStatus} detail={t.raidDetail} status={protection?.raidProtectionEnabled} t={t} />
+        <StatusRow icon={Activity} label={t.argusServerStatus} detail={featureDetail(protection?.guildEnabled, protection, botStatus, t.serverEnabledDetail, t)} status={serverStatus} t={t} />
+        <StatusRow icon={ShieldAlert} label={t.antiNukeStatus} detail={featureDetail(protection?.antiNukeEnabled, protection, botStatus, t.antinukeDetail, t)} status={featureStatus(protection?.antiNukeEnabled, protection, botStatus)} t={t} />
+        <StatusRow icon={Gauge} label={t.raidStatus} detail={featureDetail(protection?.raidProtectionEnabled, protection, botStatus, t.raidDetail, t)} status={featureStatus(protection?.raidProtectionEnabled, protection, botStatus)} t={t} />
+        <StatusRow icon={Link2} label={t.linkScanningStatus} detail={featureDetail(protection?.linkScanningEnabled, protection, botStatus, t.linkScanningDetail, t)} status={featureStatus(protection?.linkScanningEnabled, protection, botStatus)} t={t} />
+        <StatusRow icon={Archive} label={t.backupStatus} detail={featureDetail(protection?.backupsEnabled, protection, botStatus, t.backupDetail, t)} status={backupStatus === 'enabled' ? 'on_demand' : backupStatus} t={t} />
       </ul>
     </section>
   );
@@ -135,6 +161,9 @@ export default function GuildOverviewPage({ t, language, guild, user, siteAdmin,
   const protection = summary?.protection;
   const bot = summary?.bot;
   const botStatus = bot?.status;
+  const protectionStatus = protection?.maintenanceMode === true || protection?.guildEnabled === false
+    ? 'disabled'
+    : botStatus === 'offline' ? 'unavailable' : botStatus === 'online' ? 'enabled' : 'runtime_unknown';
   const heartbeatDetail = bot?.lastHeartbeatAt
     ? `${t.lastHeartbeat}: ${formatDashboardTimestamp(bot.lastHeartbeatAt, language, t.timestampInvalid)}${botStatus === 'offline' ? ` · ${t.botHeartbeatStale}` : ''}`
     : botStatus === 'offline' ? t.botHeartbeatMissing : t.botHeartbeatUnknown;
@@ -175,7 +204,7 @@ export default function GuildOverviewPage({ t, language, guild, user, siteAdmin,
               <section className="summary-section" aria-labelledby="live-summary-heading">
                 <div className="section-heading"><h2 id="live-summary-heading">{t.summary}</h2><span>{guild.id}</span></div>
                 <div className="metrics-grid">
-                  <Metric icon={Shield} tone="blue" label={t.protection} value={statusText(protection?.status, t)} detail={`${t.antinuke}: ${statusLabel(protection?.antiNukeEnabled)} · ${t.raid}: ${statusLabel(protection?.raidProtectionEnabled)}`} />
+                  <Metric icon={Shield} tone={statusTone(protectionStatus)} label={t.protection} value={statusText(protectionStatus, t)} detail={protection?.maintenanceMode === true ? t.maintenanceDetail : protection?.guildEnabled === false ? t.serverBotDisabledDetail : botStatus === 'offline' ? t.botOffline : botStatus === 'online' ? t.serverEnabledDetail : t.controlUnknownDetail} />
                   <Metric icon={Users} tone="amber" label={t.activeTracked} value={Number.isInteger(summary?.activeTrackedMembers) ? summary.activeTrackedMembers : '—'} detail={t.activeTrackedDetail} />
                   <Metric icon={CircleAlert} tone="red" label={t.alerts} value={Number.isInteger(summary?.securityAlertsToday?.total) ? summary.securityAlertsToday.total : '—'} detail={`${t.critical}: ${Number.isInteger(summary?.securityAlertsToday?.critical) ? summary.securityAlertsToday.critical : '—'}`} />
                   <Metric icon={Activity} tone={botStatusTone(botStatus)} label={t.botStatus} value={botStatusText(botStatus, t)} detail={heartbeatDetail} />
@@ -202,7 +231,7 @@ export default function GuildOverviewPage({ t, language, guild, user, siteAdmin,
               )}
 
               <div className="activity-grid live-overview-grid">
-                <ProtectionPanel protection={protection} t={t} />
+                <ProtectionPanel protection={protection} botStatus={botStatus} t={t} />
 
                 <section className="panel events-panel live-events-panel" aria-labelledby="live-events-heading">
                   <div className="panel-heading"><div><h2 id="live-events-heading">{t.recentEvents}</h2><p>{t.eventsUtc}</p></div><span className="live-event-count">{recentEvents.length}</span></div>

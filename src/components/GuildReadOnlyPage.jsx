@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Archive, Check, ChevronDown, LogOut, Menu, Pencil, RefreshCw, Shield, ShieldAlert, X } from 'lucide-react';
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from 'react';
+import { Archive, Check, ChevronDown, CircleAlert, LogOut, Menu, Pencil, RefreshCw, Shield, ShieldAlert, X } from 'lucide-react';
 import AppSidebar from './AppSidebar.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import { ContentSkeleton } from './LoadingSkeleton.jsx';
@@ -58,33 +58,73 @@ function createSettingsDraft(settings = {}) {
   };
 }
 
-function SettingField({ label, description, children }) {
-  return <label className="settings-field"><span>{label}</span>{description && <small>{description}</small>}{children}</label>;
-}
-
-function SettingToggle({ label, description, checked, disabled, onChange }) {
+function SettingInfoButton({ label, description, t }) {
+  const dialogRef = useRef(null);
+  const titleId = useId();
   return (
-    <label className="settings-toggle">
-      <span><strong>{label}</strong>{description && <small>{description}</small>}</span>
-      <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
-    </label>
+    <>
+      <button className="settings-info-button" type="button" aria-label={`${t.settingsInfoOpen}: ${label}`} aria-haspopup="dialog"
+        onClick={(event) => { event.preventDefault(); dialogRef.current?.showModal(); }}>
+        <CircleAlert size={16} aria-hidden="true" />
+      </button>
+      <dialog ref={dialogRef} className="settings-info-dialog" aria-labelledby={titleId}
+        onClick={(event) => { if (event.target === dialogRef.current) dialogRef.current.close(); }}>
+        <section className="settings-info-card">
+          <button className="settings-info-close" type="button" aria-label={t.settingsInfoClose} onClick={() => dialogRef.current?.close()}><X size={17} aria-hidden="true" /></button>
+          <span className="settings-info-icon"><CircleAlert size={20} aria-hidden="true" /></span>
+          <h2 id={titleId}>{label}</h2>
+          <p>{description}</p>
+        </section>
+      </dialog>
+    </>
   );
 }
 
-function NumberSetting({ label, value, min, max, step = 1, disabled, onChange }) {
+function SettingField({ label, description, help, t, children }) {
+  const fieldId = useId();
+  const labelId = useId();
+  const control = isValidElement(children)
+    ? cloneElement(children, {
+      id: children.props.id || fieldId,
+      'aria-labelledby': children.props['aria-labelledby'] || labelId
+    })
+    : children;
   return (
-    <SettingField label={label}>
+    <div className="settings-field">
+      <div className="settings-field-heading"><span id={labelId}>{label}</span>{help && <SettingInfoButton label={label} description={help} t={t} />}</div>
+      {description && <small>{description}</small>}
+      {control}
+    </div>
+  );
+}
+
+function SettingToggle({ label, description, help, t, checked, disabled, onChange }) {
+  const inputId = useId();
+  return (
+    <div className="settings-toggle">
+      <span className="settings-toggle-copy">
+        <span className="settings-toggle-heading"><label htmlFor={inputId}><strong>{label}</strong></label>{help && <SettingInfoButton label={label} description={help} t={t} />}</span>
+        {description && <small>{description}</small>}
+      </span>
+      <input id={inputId} type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
+    </div>
+  );
+}
+
+function NumberSetting({ label, value, min, max, step = 1, disabled, help, t, onChange }) {
+  return (
+    <SettingField label={label} help={help} t={t}>
       <input type="number" value={value} min={min} max={max} step={step} required disabled={disabled}
         onChange={(event) => onChange(event.target.value)} />
     </SettingField>
   );
 }
 
-function ChannelSetting({ label, emptyLabel, id, value, channels, channelsState, disabled, t, onChange, onReload }) {
+function ChannelSetting({ label, emptyLabel, id, value, channels, channelsState, disabled, t, help, onChange, onReload }) {
   const currentUnavailable = value && !channels.some((channel) => channel.id === value);
   return (
     <div className="settings-field">
-      <label htmlFor={id}>{label}</label>
+      <div className="settings-field-heading"><label htmlFor={id}>{label}</label>{help && <SettingInfoButton label={label} description={help} t={t} />}</div>
       <select id={id} value={value} disabled={disabled || channelsState === 'loading'} onChange={(event) => onChange(event.target.value)}>
         <option value="">{emptyLabel || t.useDefaultChannel}</option>
         {currentUnavailable && <option value={value}>{t.unavailableCurrentChannel}</option>}
@@ -96,10 +136,10 @@ function ChannelSetting({ label, emptyLabel, id, value, channels, channelsState,
   );
 }
 
-function RoleSetting({ label, value, roles, channelsState, disabled, t, onChange, onReload }) {
+function RoleSetting({ label, value, roles, channelsState, disabled, t, help, onChange, onReload }) {
   const currentUnavailable = value && !roles.some((role) => role.id === value);
   return (
-    <SettingField label={label}>
+    <SettingField label={label} help={help} t={t}>
       <select value={value} disabled={disabled || channelsState === 'loading'} onChange={(event) => onChange(event.target.value)}>
         <option value="">{t.noQuarantineRole}</option>
         {currentUnavailable && <option value={value}>{t.unavailableCurrentRole}</option>}
@@ -249,23 +289,23 @@ function SettingsContent({
           <div><h1>{t.settingsEditor}</h1><p>{canManageSettings ? t.settingsEditSummary : t.settingsReadOnlyAccess}</p></div>
         </header>
         {!canManageSettings && <section className="settings-owner-note panel"><Shield size={18} aria-hidden="true" /><p>{t.settingsOwnerOnly}</p></section>}
-        <fieldset className="settings-access-fieldset" disabled={!canManageSettings || busy}>
+        <fieldset className="settings-access-fieldset" disabled={busy} aria-disabled={!canManageSettings}>
 
         <details className="settings-group settings-disclosure panel">
           <summary className="settings-group-heading"><h2>{t.generalSettings}</h2><ChevronDown className="settings-disclosure-chevron" size={18} aria-hidden="true" /></summary>
           <div className="settings-group-content">
           <p className="settings-group-description">{t.settingsGeneralDescription}</p>
           <div className="settings-control-grid">
-            <SettingField label={t.botLanguage}>
-              <select value={draft.general.language} disabled={busy} onChange={(event) => updateField('general', 'language', event.target.value)}>
+            <SettingField label={t.botLanguage} help={t.settingsHelpBotLanguage} t={t}>
+              <select value={draft.general.language} disabled={!canManageSettings || busy} onChange={(event) => updateField('general', 'language', event.target.value)}>
                 <option value="ar">{t.arabic}</option><option value="en">{t.english}</option>
               </select>
             </SettingField>
-            <ChannelSetting id="settings-security-channel" label={t.securityLogChannel} emptyLabel={t.disableSecurityChannel}
-              value={draft.general.securityLogChannelId} channels={channelOptions} channelsState={channelsState} disabled={busy} t={t} onReload={onReloadChannels}
+            <ChannelSetting id="settings-security-channel" label={t.securityLogChannel} help={t.settingsHelpSecurityLog} emptyLabel={t.disableSecurityChannel}
+              value={draft.general.securityLogChannelId} channels={channelOptions} channelsState={channelsState} disabled={!canManageSettings || busy} t={t} onReload={onReloadChannels}
               onChange={(value) => updateField('general', 'securityLogChannelId', value)} />
           </div>
-          <SettingToggle label={t.ownerAlerts} checked={draft.general.ownerAlertsEnabled} disabled={busy}
+          <SettingToggle label={t.ownerAlerts} help={t.settingsHelpOwnerAlerts} t={t} checked={draft.general.ownerAlertsEnabled} disabled={!canManageSettings || busy}
             onChange={(value) => updateField('general', 'ownerAlertsEnabled', value)} />
           </div>
         </details>
@@ -274,46 +314,46 @@ function SettingsContent({
           <summary className="settings-group-heading"><h2>{t.antiNukeControls}</h2><ChevronDown className="settings-disclosure-chevron" size={18} aria-hidden="true" /></summary>
           <div className="settings-group-content">
           <p className="settings-group-description">{t.antiNukeDescription}</p>
-          <SettingToggle label={t.protectionEnabled} description={t.enableProtectionDescription} checked={draft.antinuke.enabled} disabled={busy}
+          <SettingToggle label={t.protectionEnabled} description={t.enableProtectionDescription} help={t.settingsHelpAntiNukeEnabled} t={t} checked={draft.antinuke.enabled} disabled={!canManageSettings || busy}
             onChange={(value) => updateField('antinuke', 'enabled', value)} />
-          <SettingField label={t.botScreeningMode} description={t.botScreeningModeHelp}>
-            <select value={draft.antinuke.botScreeningMode} disabled={busy} onChange={(event) => updateField('antinuke', 'botScreeningMode', event.target.value)}>
+          <SettingField label={t.botScreeningMode} description={t.botScreeningModeHelp} help={t.settingsHelpBotScreening} t={t}>
+            <select value={draft.antinuke.botScreeningMode} disabled={!canManageSettings || busy} onChange={(event) => updateField('antinuke', 'botScreeningMode', event.target.value)}>
               <option value="off">{t.botScreeningOff}</option>
               <option value="untrusted">{t.botScreeningUntrusted}</option>
               <option value="all">{t.botScreeningAll}</option>
             </select>
           </SettingField>
           <div className="settings-control-grid settings-control-grid-compact">
-            <SettingField label={t.mode}>
-              <select value={draft.antinuke.mode} disabled={busy} onChange={(event) => updateField('antinuke', 'mode', event.target.value)}>
+            <SettingField label={t.mode} help={t.settingsHelpAntiNukeMode} t={t}>
+              <select value={draft.antinuke.mode} disabled={!canManageSettings || busy} onChange={(event) => updateField('antinuke', 'mode', event.target.value)}>
                 <option value="enforce">{t.enforceMode}</option><option value="monitor">{t.monitorMode}</option>
               </select>
             </SettingField>
-            <SettingField label={t.unauthorizedBotAction}>
-              <select value={draft.antinuke.unauthorizedBotAction} disabled={busy} onChange={(event) => updateField('antinuke', 'unauthorizedBotAction', event.target.value)}>
+            <SettingField label={t.unauthorizedBotAction} help={t.settingsHelpUnauthorizedBotAction} t={t}>
+              <select value={draft.antinuke.unauthorizedBotAction} disabled={!canManageSettings || busy} onChange={(event) => updateField('antinuke', 'unauthorizedBotAction', event.target.value)}>
                 <option value="quarantine">{t.quarantine}</option><option value="kick">{t.kick}</option>
               </select>
             </SettingField>
-            <RoleSetting label={t.quarantineRole} value={draft.antinuke.quarantineRoleId} roles={roleOptions} channelsState={channelsState} disabled={busy} t={t} onReload={onReloadChannels}
+            <RoleSetting label={t.quarantineRole} help={t.settingsHelpQuarantineRole} value={draft.antinuke.quarantineRoleId} roles={roleOptions} channelsState={channelsState} disabled={!canManageSettings || busy} t={t} onReload={onReloadChannels}
               onChange={(value) => updateField('antinuke', 'quarantineRoleId', value)} />
-            <NumberSetting label={t.quarantineTimeout} value={draft.antinuke.quarantineTimeoutHours} min="1" max="672" disabled={busy}
+            <NumberSetting label={t.quarantineTimeout} help={t.settingsHelpQuarantineTimeout} t={t} value={draft.antinuke.quarantineTimeoutHours} min="1" max="672" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('antinuke', 'quarantineTimeoutHours', value)} />
           </div>
           <h3 className="settings-subheading">{t.thresholdGroup}</h3>
           <div className="settings-threshold-grid">{ANTINUKE_CATEGORIES.map((category) => (
             <fieldset className="settings-threshold" key={category}>
               <legend>{t[category]}</legend>
-              <NumberSetting label={t.limit} value={draft.antinuke.thresholds[category].limit} min="1" max="50" disabled={busy}
+              <NumberSetting label={t.limit} help={t.settingsHelpThresholdLimit(t[category])} t={t} value={draft.antinuke.thresholds[category].limit} min="1" max="50" disabled={!canManageSettings || busy}
                 onChange={(value) => updateThreshold(category, 'limit', value)} />
-              <NumberSetting label={t.windowSeconds} value={draft.antinuke.thresholds[category].windowSeconds} min="3" max="300" disabled={busy}
+              <NumberSetting label={t.windowSeconds} help={t.settingsHelpThresholdWindow(t[category])} t={t} value={draft.antinuke.thresholds[category].windowSeconds} min="3" max="300" disabled={!canManageSettings || busy}
                 onChange={(value) => updateThreshold(category, 'windowSeconds', value)} />
             </fieldset>
           ))}</div>
           <h3 className="settings-subheading">{t.escalation}</h3>
           <div className="settings-control-grid settings-control-grid-compact">
-            <NumberSetting label={t.banAfterBreaches} value={draft.antinuke.escalation.banAfterBreaches} min="2" max="10" disabled={busy}
+            <NumberSetting label={t.banAfterBreaches} help={t.settingsHelpEscalationBreaches} t={t} value={draft.antinuke.escalation.banAfterBreaches} min="2" max="10" disabled={!canManageSettings || busy}
               onChange={(value) => setDraft((current) => ({ ...current, antinuke: { ...current.antinuke, escalation: { ...current.antinuke.escalation, banAfterBreaches: value } } }))} />
-            <NumberSetting label={t.windowMinutes} value={draft.antinuke.escalation.windowMinutes} min="5" max="1440" disabled={busy}
+            <NumberSetting label={t.windowMinutes} help={t.settingsHelpEscalationWindow} t={t} value={draft.antinuke.escalation.windowMinutes} min="5" max="1440" disabled={!canManageSettings || busy}
               onChange={(value) => setDraft((current) => ({ ...current, antinuke: { ...current.antinuke, escalation: { ...current.antinuke.escalation, windowMinutes: value } } }))} />
           </div>
           </div>
@@ -323,19 +363,19 @@ function SettingsContent({
           <summary className="settings-group-heading"><h2>{t.raidModule}</h2><ChevronDown className="settings-disclosure-chevron" size={18} aria-hidden="true" /></summary>
           <div className="settings-group-content">
           <p className="settings-group-description">{t.raidDescription}</p>
-          <SettingToggle label={t.protectionEnabled} description={t.enableProtectionDescription} checked={draft.raid.enabled} disabled={busy}
+          <SettingToggle label={t.protectionEnabled} description={t.enableProtectionDescription} help={t.settingsHelpRaidEnabled} t={t} checked={draft.raid.enabled} disabled={!canManageSettings || busy}
             onChange={(value) => updateField('raid', 'enabled', value)} />
           <div className="settings-subheading">{t.joinThresholds}</div>
           <div className="settings-control-grid">
-            <NumberSetting label={t.watchJoins} value={draft.raid.watch_joins} min="2" max="100" disabled={busy}
+            <NumberSetting label={t.watchJoins} help={t.settingsHelpWatchJoins} t={t} value={draft.raid.watch_joins} min="2" max="100" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('raid', 'watch_joins', value)} />
-            <NumberSetting label={t.watchWindow} value={draft.raid.watch_window_seconds} min="5" max="300" disabled={busy}
+            <NumberSetting label={t.watchWindow} help={t.settingsHelpWatchWindow} t={t} value={draft.raid.watch_window_seconds} min="5" max="300" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('raid', 'watch_window_seconds', value)} />
-            <NumberSetting label={t.modeJoins} value={draft.raid.mode_joins} min="3" max="200" disabled={busy}
+            <NumberSetting label={t.modeJoins} help={t.settingsHelpRaidModeJoins} t={t} value={draft.raid.mode_joins} min="3" max="200" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('raid', 'mode_joins', value)} />
-            <NumberSetting label={t.modeWindow} value={draft.raid.mode_window_seconds} min="5" max="300" disabled={busy}
+            <NumberSetting label={t.modeWindow} help={t.settingsHelpRaidModeWindow} t={t} value={draft.raid.mode_window_seconds} min="5" max="300" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('raid', 'mode_window_seconds', value)} />
-            <NumberSetting label={t.suspiciousRatio} value={draft.raid.suspicious_ratio} min="0" max="1" step="0.05" disabled={busy}
+            <NumberSetting label={t.suspiciousRatio} help={t.settingsHelpSuspiciousRatio} t={t} value={draft.raid.suspicious_ratio} min="0" max="1" step="0.05" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('raid', 'suspicious_ratio', value)} />
           </div>
           </div>
@@ -346,18 +386,18 @@ function SettingsContent({
           <div className="settings-group-content">
           <p className="settings-group-description">{t.trackingDescription}</p>
           <div className="settings-control-grid">
-            <NumberSetting label={t.suspiciousScore} value={draft.tracking.tier_suspicious_score} min="1" max="5" disabled={busy}
+            <NumberSetting label={t.suspiciousScore} help={t.settingsHelpSuspiciousScore} t={t} value={draft.tracking.tier_suspicious_score} min="1" max="5" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('tracking', 'tier_suspicious_score', value)} />
-            <NumberSetting label={t.highRiskScore} value={draft.tracking.tier_high_risk_score} min="2" max="6" disabled={busy}
+            <NumberSetting label={t.highRiskScore} help={t.settingsHelpHighRiskScore} t={t} value={draft.tracking.tier_high_risk_score} min="2" max="6" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('tracking', 'tier_high_risk_score', value)} />
-            <NumberSetting label={t.criticalScore} value={draft.tracking.tier_critical_score} min="3" max="8" disabled={busy}
+            <NumberSetting label={t.criticalScore} help={t.settingsHelpCriticalScore} t={t} value={draft.tracking.tier_critical_score} min="3" max="8" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('tracking', 'tier_critical_score', value)} />
-            <NumberSetting label={t.trackingDuration} value={draft.tracking.tracking_duration_hours} min="12" max="168" disabled={busy}
+            <NumberSetting label={t.trackingDuration} help={t.settingsHelpTrackingDuration} t={t} value={draft.tracking.tracking_duration_hours} min="12" max="168" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('tracking', 'tracking_duration_hours', value)} />
-            <NumberSetting label={t.usernameEntropy} value={draft.tracking.username_entropy_threshold} min="2" max="6" step="0.1" disabled={busy}
+            <NumberSetting label={t.usernameEntropy} help={t.settingsHelpUsernameEntropy} t={t} value={draft.tracking.username_entropy_threshold} min="2" max="6" step="0.1" disabled={!canManageSettings || busy}
               onChange={(value) => updateField('tracking', 'username_entropy_threshold', value)} />
-            <ChannelSetting id="settings-tracking-channel" label={t.trackingChannel} value={draft.tracking.channelId}
-              channels={channelOptions} channelsState={channelsState} disabled={busy} t={t} onReload={onReloadChannels}
+            <ChannelSetting id="settings-tracking-channel" label={t.trackingChannel} help={t.settingsHelpTrackingChannel} value={draft.tracking.channelId}
+              channels={channelOptions} channelsState={channelsState} disabled={!canManageSettings || busy} t={t} onReload={onReloadChannels}
               onChange={(value) => updateField('tracking', 'channelId', value)} />
           </div>
           {!trackingOrderValid && <p className="settings-validation" role="alert">{t.settingsValidation}</p>}
@@ -369,11 +409,11 @@ function SettingsContent({
           <div className="settings-group-content">
           <p className="settings-group-description">{t.alertsAndAppealsDescription}</p>
           <div className="settings-control-grid">
-            <ChannelSetting id="settings-alerts-channel" label={t.alertChannel} value={draft.alerts.channelId}
-              channels={channelOptions} channelsState={channelsState} disabled={busy} t={t} onReload={onReloadChannels}
+            <ChannelSetting id="settings-alerts-channel" label={t.alertChannel} help={t.settingsHelpAlertChannel} value={draft.alerts.channelId}
+              channels={channelOptions} channelsState={channelsState} disabled={!canManageSettings || busy} t={t} onReload={onReloadChannels}
               onChange={(value) => updateField('alerts', 'channelId', value)} />
-            <ChannelSetting id="settings-appeals-channel" label={t.appealsChannel} value={draft.appeals.reviewChannelId}
-              channels={channelOptions} channelsState={channelsState} disabled={busy} t={t} onReload={onReloadChannels}
+            <ChannelSetting id="settings-appeals-channel" label={t.appealsChannel} help={t.settingsHelpAppealsChannel} value={draft.appeals.reviewChannelId}
+              channels={channelOptions} channelsState={channelsState} disabled={!canManageSettings || busy} t={t} onReload={onReloadChannels}
               onChange={(value) => updateField('appeals', 'reviewChannelId', value)} />
           </div>
           </div>

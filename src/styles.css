@@ -1567,15 +1567,15 @@ button:disabled { cursor: not-allowed; }
 .settings-threshold-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .settings-threshold { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; min-width: 0; padding: 15px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--surface) 44%, transparent); }
 .settings-threshold legend { padding: 0 5px; color: var(--text); font-size: 12px; font-weight: 600; }
-.settings-info-button { display: inline-grid; width: 23px; height: 23px; flex: 0 0 auto; place-items: center; padding: 0; color: var(--gold); background: color-mix(in srgb, var(--gold) 9%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 38%, var(--border)); border-radius: 50%; cursor: pointer; transition: background 160ms ease, transform 160ms ease, border-color 160ms ease; }
-.settings-info-button:hover { background: color-mix(in srgb, var(--gold) 17%, transparent); border-color: var(--gold); transform: translateY(-1px); }
-.settings-info-button svg { width: 14px; height: 14px; }
+.settings-info-button { display: inline-grid; width: 23px; min-width: 23px; height: 23px; min-height: 23px; flex: 0 0 23px; place-items: center; padding: 0; color: var(--muted); background: var(--panel-hover); border: 1px solid var(--border); border-radius: 50%; line-height: 1; cursor: pointer; transition: color 160ms ease, background 160ms ease, border-color 160ms ease; }
+.settings-info-button:hover { color: var(--text); background: var(--surface-2); border-color: color-mix(in srgb, var(--muted) 55%, var(--border)); }
+.settings-info-button svg { display: block; width: 14px; height: 14px; }
 .settings-info-dialog { position: fixed; inset: 0; width: min(440px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: visible; color: var(--text); background: transparent; border: 0; }
 .settings-info-dialog::backdrop { background: rgba(5, 6, 10, .72); backdrop-filter: blur(6px); }
-.settings-info-card { position: relative; display: grid; justify-items: start; gap: 14px; padding: clamp(24px, 6vw, 34px); background: linear-gradient(145deg, color-mix(in srgb, var(--panel) 96%, var(--gold)), var(--panel) 55%); border: 1px solid color-mix(in srgb, var(--gold) 34%, var(--border)); border-radius: 18px; box-shadow: 0 24px 80px rgba(0, 0, 0, .38); }
-.settings-info-close { position: absolute; inset-block-start: 13px; inset-inline-end: 13px; display: grid; width: 34px; height: 34px; place-items: center; color: var(--soft); background: var(--surface); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; }
-.settings-info-close:hover { color: var(--text); border-color: var(--gold); }
-.settings-info-icon { display: grid; width: 44px; height: 44px; place-items: center; color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent); border-radius: 14px; }
+.settings-info-card { position: relative; display: grid; justify-items: start; gap: 14px; padding: clamp(24px, 6vw, 34px); background: var(--panel); border: 1px solid var(--border); border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, .3); }
+.settings-info-close { position: absolute; inset-block-start: 13px; inset-inline-end: 13px; display: grid; width: 34px; min-width: 34px; height: 34px; min-height: 34px; place-items: center; padding: 0; color: var(--muted); background: var(--panel-hover); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; }
+.settings-info-close:hover { color: var(--text); background: var(--surface-2); border-color: color-mix(in srgb, var(--muted) 55%, var(--border)); }
+.settings-info-icon { display: grid; width: 40px; height: 40px; place-items: center; color: var(--muted); background: var(--panel-hover); border: 1px solid var(--border); border-radius: 12px; }
 .settings-info-card h2 { margin: 2px 0 0; color: var(--text); font-size: 18px; font-weight: 650; line-height: 1.5; }
 .settings-info-card p { margin: 0; color: var(--soft); font-size: 14px; line-height: 1.9; }
 .settings-inline-action { justify-self: start; min-height: 30px; padding: 0 9px; color: var(--gold); background: transparent; border: 1px solid var(--border); border-radius: 7px; font: inherit; font-size: 11px; cursor: pointer; }

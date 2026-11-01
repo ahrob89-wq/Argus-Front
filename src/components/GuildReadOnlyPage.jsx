@@ -42,6 +42,7 @@ function createSettingsDraft(settings = {}) {
       enabled: antiNuke.enabled !== false,
       mode: antiNuke.mode === 'monitor' ? 'monitor' : 'enforce',
       unauthorizedBotAction: antiNuke.unauthorizedBotAction === 'kick' ? 'kick' : 'quarantine',
+      botScreeningMode: ['off', 'untrusted', 'all'].includes(antiNuke.botScreeningMode) ? antiNuke.botScreeningMode : 'untrusted',
       quarantineRoleId: antiNuke.quarantineRoleId || '',
       quarantineTimeoutHours: antiNuke.quarantineTimeoutHours ?? 24,
       escalation: {
@@ -190,7 +191,7 @@ function LockdownControls({ canManageGuild, t, onAction, busy }) {
 }
 
 function SettingsContent({
-  data, language, t, guild, onSaveSettings, busy,
+  data, language, t, guild, canManageSettings, onSaveSettings, busy,
   channelOptions, roleOptions, channelsState, onReloadChannels
 }) {
   const [draft, setDraft] = useState(() => createSettingsDraft(data?.settings));
@@ -203,10 +204,6 @@ function SettingsContent({
     setBaseline(saved);
     setValidationError('');
   }, [data]);
-
-  if (guild.owner !== true) {
-    return <section className="settings-owner-note panel"><Shield size={18} aria-hidden="true" /><p>{t.settingsOwnerOnly}</p></section>;
-  }
 
   const changedSections = ['general', 'antinuke', 'raid', 'tracking', 'alerts', 'appeals'].filter((section) =>
     JSON.stringify(draft[section]) !== JSON.stringify(baseline[section])
@@ -241,14 +238,18 @@ function SettingsContent({
           return;
         }
         if (baseline.antinuke.enabled && !draft.antinuke.enabled && !window.confirm(t.confirmDisableAntiNuke)) return;
+        if (baseline.antinuke.botScreeningMode !== 'off' && draft.antinuke.botScreeningMode === 'off' &&
+            !window.confirm(t.confirmDisableBotScreening)) return;
         if (baseline.raid.enabled && !draft.raid.enabled && !window.confirm(t.confirmDisableRaid)) return;
         if (baseline.general.securityLogChannelId && !draft.general.securityLogChannelId && !window.confirm(t.confirmClearSecurityChannel)) return;
         setValidationError('');
         onSaveSettings(serializeSettingsDraft(draft, changedSections));
       }}>
         <header className="settings-page-heading">
-          <div><h1>{t.settingsEditor}</h1><p>{t.settingsEditSummary}</p></div>
+          <div><h1>{t.settingsEditor}</h1><p>{canManageSettings ? t.settingsEditSummary : t.settingsReadOnlyAccess}</p></div>
         </header>
+        {!canManageSettings && <section className="settings-owner-note panel"><Shield size={18} aria-hidden="true" /><p>{t.settingsOwnerOnly}</p></section>}
+        <fieldset className="settings-access-fieldset" disabled={!canManageSettings || busy}>
 
         <details className="settings-group settings-disclosure panel">
           <summary className="settings-group-heading"><h2>{t.generalSettings}</h2><ChevronDown className="settings-disclosure-chevron" size={18} aria-hidden="true" /></summary>
@@ -275,6 +276,13 @@ function SettingsContent({
           <p className="settings-group-description">{t.antiNukeDescription}</p>
           <SettingToggle label={t.protectionEnabled} description={t.enableProtectionDescription} checked={draft.antinuke.enabled} disabled={busy}
             onChange={(value) => updateField('antinuke', 'enabled', value)} />
+          <SettingField label={t.botScreeningMode} description={t.botScreeningModeHelp}>
+            <select value={draft.antinuke.botScreeningMode} disabled={busy} onChange={(event) => updateField('antinuke', 'botScreeningMode', event.target.value)}>
+              <option value="off">{t.botScreeningOff}</option>
+              <option value="untrusted">{t.botScreeningUntrusted}</option>
+              <option value="all">{t.botScreeningAll}</option>
+            </select>
+          </SettingField>
           <div className="settings-control-grid settings-control-grid-compact">
             <SettingField label={t.mode}>
               <select value={draft.antinuke.mode} disabled={busy} onChange={(event) => updateField('antinuke', 'mode', event.target.value)}>
@@ -370,8 +378,8 @@ function SettingsContent({
           </div>
           </div>
         </details>
-        {validationError && <p className="settings-validation" role="alert">{validationError}</p>}
-        <div className="settings-save-bar">
+        {canManageSettings && validationError && <p className="settings-validation" role="alert">{validationError}</p>}
+        {canManageSettings && <div className="settings-save-bar">
           <span className={changedSections.length ? 'settings-dirty' : 'settings-clean'}>{changedSections.length ? t.unsavedChanges : t.noUnsavedChanges}</span>
           <div>
             <button type="button" className="settings-secondary-button" disabled={!changedSections.length || busy} onClick={() => { setDraft(baseline); setValidationError(''); }}>{t.discardChanges}</button>
@@ -379,7 +387,8 @@ function SettingsContent({
               {busy ? t.settingsSaving : t.saveSettings}
             </button>
           </div>
-        </div>
+        </div>}
+        </fieldset>
       </form>
     </div>
   );
@@ -387,7 +396,7 @@ function SettingsContent({
 
 function BackupsContent({
   result, page, limit, onPageChange, setLimit, state, language, t,
-  onCreateBackup, onDeleteBackup, onRenameBackup, onPreviewRestore, onConfirmRestore,
+  onCreateBackup, canCreateBackup, onDeleteBackup, onRenameBackup, onPreviewRestore, onConfirmRestore,
   isGuildOwner, backupAction, restorePreview, restoreConfirmCode, setRestoreConfirmCode
 }) {
   const [editingBackupId, setEditingBackupId] = useState(null);
@@ -397,7 +406,7 @@ function BackupsContent({
   const hasMore = result?.hasMore === true && currentPage < 50;
   return (
     <>
-      <div className="backup-toolbar"><div><h2>{t.backupArchive}</h2><p>{t.backupActionsDetail}</p></div><div className="backup-toolbar-actions"><label><span>{t.rowsPerPage}</span><select value={limit} onChange={(event) => setLimit(Number(event.target.value))}>{BACKUP_LIMITS.map((size) => <option key={size} value={size}>{size}</option>)}</select></label><button type="button" className="refresh-button" onClick={onCreateBackup} disabled={backupAction?.status === 'pending'}><Archive size={15} aria-hidden="true" />{t.createBackup}</button></div></div>
+      <div className="backup-toolbar"><div><h2>{t.backupArchive}</h2><p>{t.backupActionsDetail}</p></div><div className="backup-toolbar-actions"><label><span>{t.rowsPerPage}</span><select value={limit} onChange={(event) => setLimit(Number(event.target.value))}>{BACKUP_LIMITS.map((size) => <option key={size} value={size}>{size}</option>)}</select></label>{canCreateBackup && <button type="button" className="refresh-button" onClick={onCreateBackup} disabled={backupAction?.status === 'pending'}><Archive size={15} aria-hidden="true" />{t.createBackup}</button>}</div></div>
       {backupAction && <p className={`backup-action-feedback ${backupAction.status === 'error' ? 'error' : backupAction.status === 'success' ? 'success' : ''}`} role={backupAction.status === 'error' ? 'alert' : 'status'}>{backupAction.message}</p>}
       {restorePreview && <section className="read-info-card panel restore-preview">
         <div className="read-section-heading"><div><h2>{t.restorePreviewTitle}</h2><p>{t.restorePreviewSummary}</p></div><ShieldAlert size={17} aria-hidden="true" /></div>
@@ -450,6 +459,15 @@ function BackupsContent({
 }
 
 export default function GuildReadOnlyPage({ page, t, language, guild, user, siteAdmin, onNavigate, onSwitchServer, onSignOut, authBusy, onLanguageToggle, onSessionExpired }) {
+  const dashboardPermissions = Array.isArray(guild.dashboardPermissions) ? guild.dashboardPermissions : null;
+  const canViewSettings = guild.owner === true || dashboardPermissions?.includes('settings.view') === true;
+  const canManageSettings = guild.owner === true || dashboardPermissions?.includes('settings.manage') === true;
+  const canManageProtection = guild.owner === true || (dashboardPermissions === null
+    ? true
+    : dashboardPermissions.includes('protection.manage'));
+  const canCreateBackup = guild.owner === true || (dashboardPermissions === null
+    ? true
+    : dashboardPermissions.includes('backups.create'));
   const [result, setResult] = useState(null);
   const [state, setState] = useState('loading');
   const [backupPage, setBackupPage] = useState(1);
@@ -608,7 +626,7 @@ export default function GuildReadOnlyPage({ page, t, language, guild, user, site
   };
 
   useEffect(() => {
-    if (page !== 'settings' || guild.owner !== true) {
+    if (page !== 'settings' || !canViewSettings) {
       setChannelOptions([]);
       setRoleOptions([]);
       setChannelsState('idle');
@@ -632,7 +650,7 @@ export default function GuildReadOnlyPage({ page, t, language, guild, user, site
       setChannelsState('error');
     });
     return () => { active = false; };
-  }, [guild.id, guild.owner, onSessionExpired, page, refreshToken]);
+  }, [canViewSettings, guild.id, guild.owner, onSessionExpired, page, refreshToken]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -685,10 +703,10 @@ export default function GuildReadOnlyPage({ page, t, language, guild, user, site
           {state === 'page-error' && <div className="live-stale-state" role="status"><p>{page === 'backups' ? t.backupPageUnavailable : t.staleData}</p><button className="tracking-reset-button" type="button" onClick={refresh}>{t.retry}</button></div>}
           {state === 'denied' && <div className="read-page-empty panel" role="alert"><Shield size={20} aria-hidden="true" /><h2>{page === 'backups' ? t.backupsDeniedTitle : t.readPageDeniedTitle}</h2><p>{page === 'backups' ? t.backupsDeniedDescription : t.readPageDeniedDescription}</p><button className="tracking-reset-button" type="button" onClick={() => onNavigate('/guilds')}>{t.switchServer}</button></div>}
 
-          {result && page === 'settings' && <SettingsContent data={result} language={language} t={t} guild={guild} onSaveSettings={(settings) => runGuildAction('settings-save', { settings })} busy={settingsAction?.status === 'pending'} channelOptions={channelOptions} roleOptions={roleOptions} channelsState={channelsState} onReloadChannels={refresh} />}
-          {result && page === 'settings' && <LockdownControls canManageGuild t={t} onAction={runGuildAction} busy={settingsAction?.status === 'pending'} />}
+          {result && page === 'settings' && <SettingsContent data={result} language={language} t={t} guild={guild} canManageSettings={canManageSettings} onSaveSettings={(settings) => runGuildAction('settings-save', { settings })} busy={settingsAction?.status === 'pending'} channelOptions={channelOptions} roleOptions={roleOptions} channelsState={channelsState} onReloadChannels={refresh} />}
+          {result && page === 'settings' && <LockdownControls canManageGuild={canManageProtection} t={t} onAction={runGuildAction} busy={settingsAction?.status === 'pending'} />}
           {page === 'settings' && settingsAction && <p className={`backup-action-feedback ${settingsAction.status === 'error' ? 'error' : settingsAction.status === 'success' ? 'success' : ''}`} role={settingsAction.status === 'error' ? 'alert' : 'status'}>{settingsAction.message}</p>}
-          {result && page === 'backups' && <BackupsContent result={result} page={backupPage} limit={backupLimit} onPageChange={(nextPage) => { setBackupPage(nextPage); setRefreshToken((value) => value + 1); }} setLimit={(value) => { setBackupLimit(value); setBackupPage(1); setResult(null); }} state={state} language={language} t={t} onCreateBackup={createBackup} onDeleteBackup={deleteBackupFromDashboard} onRenameBackup={renameBackupFromDashboard} onPreviewRestore={previewBackupRestore} onConfirmRestore={confirmBackupRestore} isGuildOwner={guild.owner === true} backupAction={backupAction} restorePreview={restorePreview} restoreConfirmCode={restoreConfirmCode} setRestoreConfirmCode={setRestoreConfirmCode} />}
+          {result && page === 'backups' && <BackupsContent result={result} page={backupPage} limit={backupLimit} onPageChange={(nextPage) => { setBackupPage(nextPage); setRefreshToken((value) => value + 1); }} setLimit={(value) => { setBackupLimit(value); setBackupPage(1); setResult(null); }} state={state} language={language} t={t} onCreateBackup={createBackup} canCreateBackup={canCreateBackup} onDeleteBackup={deleteBackupFromDashboard} onRenameBackup={renameBackupFromDashboard} onPreviewRestore={previewBackupRestore} onConfirmRestore={confirmBackupRestore} isGuildOwner={guild.owner === true} backupAction={backupAction} restorePreview={restorePreview} restoreConfirmCode={restoreConfirmCode} setRestoreConfirmCode={setRestoreConfirmCode} />}
 
           <footer className="page-footer"><span><Shield size={14} aria-hidden="true" />{page === 'backups' ? t.backupsActionsNote : t.settingsFooter}</span><span>ARGUS SECURITY · {new Date().getUTCFullYear()}</span></footer>
         </main>

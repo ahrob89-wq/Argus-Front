@@ -1,6 +1,6 @@
 export const translations = {
   en: {
-    overview: 'Overview', analytics: 'Analytics', tracking: 'Tracking', events: 'Security Events', settings: 'Settings', signOut: 'Sign out', signingOut: 'Signing out…', workspace: 'WORKSPACE', discordAccount: 'Discord account', dashboardLabel: 'Argus dashboard', mainNavigation: 'Main navigation',
+    overview: 'Overview', analytics: 'Analytics', tracking: 'Tracking', members: 'Members', permissions: 'Permissions', events: 'Security Events', settings: 'Settings', signOut: 'Sign out', signingOut: 'Signing out…', workspace: 'WORKSPACE', discordAccount: 'Discord account', dashboardLabel: 'Argus dashboard', mainNavigation: 'Main navigation',
     selectedServer: 'Selected server', switchServer: 'Switch server', search: 'Search members or events', notifications: 'Notifications, 1 unread', account: 'Account menu', language: 'Language', breadcrumb: 'Breadcrumb', menu: 'Open navigation menu', closeMenu: 'Close navigation menu',
     securityOverview: 'Security Overview', subtitle: 'Monitor protection and recent activity for Argus Security Lab.',
     active: 'Protection Active', updated: 'Preview snapshot · not live data', refresh: 'Refresh database connection',
@@ -19,7 +19,7 @@ export const translations = {
     available: 'Available', settingsSubtitle: 'Review the safe configuration currently stored for this server.', backups: 'Backups', backupsSubtitle: 'Review backup metadata available to server administrators.', health: 'Health', healthSubtitle: 'Review the current API, database, bot, and gateway status.', refreshPage: 'Refresh page', loadingPage: (title) => `Loading ${title.toLowerCase()}…`, refreshingPage: 'Refreshing this page…', readOnlyPageNote: 'Read-only server data provided by the dashboard API', settingsReadOnly: 'Configuration values · read only', settingsConfiguration: 'Configuration', generalSettings: 'General settings', settingLanguage: 'Dashboard language', securityLogChannel: 'Security log channel configured', ownerAlerts: 'Owner alerts enabled', arabic: 'Arabic', english: 'English', settingsNotConfigured: 'Settings are not configured', settingsNotConfiguredDetail: 'This server does not have a saved dashboard settings record yet.', securityModules: 'Security modules', noModuleSettings: 'No module configuration is available.', antiNukeModule: 'Anti-Nuke', raidModule: 'Raid protection', trackingModule: 'Member tracking', verificationModule: 'Verification', alertsModule: 'Alerts', appealsModule: 'Appeals', mode: 'Mode', unauthorizedBotAction: 'Unauthorized bot action', quarantineRole: 'Quarantine role configured', quarantineTimeout: 'Quarantine timeout (hours)', thresholds: 'Thresholds', escalation: 'Escalation', channelDelete: 'Channel deletion', channelCreate: 'Channel creation', roleDelete: 'Role deletion', roleCreate: 'Role creation', memberRemoval: 'Member removal', webhookCreate: 'Webhook creation', limit: 'Limit', windowSeconds: 'Window (seconds)', banAfterBreaches: 'Ban after breaches', windowMinutes: 'Window (minutes)', watchJoins: 'Watch joins', watchWindow: 'Join window (seconds)', modeJoins: 'Mode join threshold', modeWindow: 'Mode window (seconds)', suspiciousRatio: 'Suspicious ratio', suspiciousScore: 'Suspicious score tier', highRiskScore: 'High-risk score tier', criticalScore: 'Critical score tier', trackingDuration: 'Tracking duration (hours)', usernameEntropy: 'Username entropy threshold', channelConfigured: 'Tracking channel configured', stripUnverifiedRoles: 'Strip roles before verification', panelConfigured: 'Verification panel configured', reviewChannelConfigured: 'Appeal review channel configured', antiNukeControls: 'Anti-Nuke controls', ownerOnlyAntiNuke: 'Server owner only · changes are recorded in the security log.', enableAntiNuke: 'Enable protection', disableAntiNuke: 'Disable protection', confirmDisableAntiNuke: 'Disabling Anti-Nuke reduces server protection. Confirm?', enforceMode: 'Enforce', monitorMode: 'Monitor only', thresholdCategory: 'Action category', saveAntiNukeSettings: 'Save threshold', settingsActionSucceeded: 'Anti-Nuke settings updated.', notAvailable: 'Not available', configured: 'Configured', backupArchive: 'Backup archive', backupMetadataOnly: 'Metadata only · backup contents and checksums are not exposed.', noBackups: 'No backup records', noBackupsDetail: 'No backup metadata is available for this server.', unnamedBackup: 'Unnamed backup', backupType: 'Trigger', createdBy: 'Created by', schemaVersion: 'Schema version', backupSize: 'Snapshot size', backupRoles: 'Roles', backupCategories: 'Categories', backupChannels: 'Channels', backupsPagination: 'Backup pages', backupPageUnavailable: 'Could not load this backup page. The metadata already shown is still available.', backupsDeniedTitle: 'Administrator access required', backupsDeniedDescription: 'Only the server owner or an administrator can view backup metadata.', readPageDeniedTitle: 'Server data unavailable', readPageDeniedDescription: 'This server is no longer available to your Discord account. Select a server you can manage.', systemHealth: 'Service status', healthSourceDetail: 'Status returned by the dashboard health API.'
   },
   ar: {
-    overview: 'نظرة عامة', analytics: 'تحليلات الأمان', tracking: 'التتبع', events: 'أحداث الأمان', settings: 'الإعدادات', signOut: 'تسجيل الخروج', signingOut: 'جارٍ تسجيل الخروج…', workspace: 'مساحة العمل', discordAccount: 'حساب Discord', dashboardLabel: 'لوحة تحكم Argus', mainNavigation: 'التنقل الرئيسي',
+    overview: 'نظرة عامة', analytics: 'تحليلات الأمان', tracking: 'التتبع', members: 'الأعضاء', permissions: 'الصلاحيات', events: 'أحداث الأمان', settings: 'الإعدادات', signOut: 'تسجيل الخروج', signingOut: 'جارٍ تسجيل الخروج…', workspace: 'مساحة العمل', discordAccount: 'حساب Discord', dashboardLabel: 'لوحة تحكم Argus', mainNavigation: 'التنقل الرئيسي',
     selectedServer: 'السيرفر المحدد', switchServer: 'تبديل السيرفر', search: 'ابحث عن عضو أو حدث', notifications: 'الإشعارات، إشعار جديد واحد', account: 'قائمة الحساب', language: 'اللغة', breadcrumb: 'مسار الصفحة', menu: 'فتح قائمة التنقل', closeMenu: 'إغلاق قائمة التنقل',
     securityOverview: 'نظرة عامة على الأمان', subtitle: 'تابع الحماية والنشاط الأخير في Argus Security Lab.',
     active: 'الحماية مفعّلة', updated: 'معاينة · بيانات غير مباشرة', refresh: 'تحديث اتصال قاعدة البيانات',
@@ -43,10 +43,17 @@ Object.assign(translations.en, {
   settingsSubtitle: 'Edit the protection settings currently used by Argus.',
   settingsFooter: 'Settings are validated and saved by Argus for this server.',
   quarantineRole: 'Quarantine role',
+  botScreeningMode: 'New bot screening',
+  botScreeningModeHelp: 'Untrusted-only exempts bots on this server’s Argus whitelist (not Discord’s verification badge). All-bots mode overrides that exemption. Anti-Nuke monitor mode still reports without containment.',
+  botScreeningOff: 'Off',
+  botScreeningUntrusted: 'Review untrusted bots only',
+  botScreeningAll: 'Review every new bot',
+  confirmDisableBotScreening: 'Turn off bot screening? New bots will join without Argus quarantine or review.',
   settingsChannelUnavailable: 'The selected channel is not available to Argus. Choose a channel Argus can use.',
   settingsRoleUnavailable: 'The selected role cannot be managed safely by Argus. Choose an eligible role below its highest role.',
   settingsEditor: 'Server settings',
   settingsOwnerOnly: 'Only the server owner can edit these settings.',
+  settingsReadOnlyAccess: 'You can review this server configuration, but you cannot change it.',
   settingsEditSummary: 'These values are saved to Argus and used by its protection modules.',
   settingsGeneralDescription: 'Language, security log delivery, and owner alerts.',
   botLanguage: 'Bot response language',
@@ -106,13 +113,21 @@ Object.assign(translations.en, {
 });
 
 Object.assign(translations.ar, {
+  members: 'الأعضاء',
   settingsSubtitle: 'عدّل إعدادات الحماية التي يستخدمها Argus حاليًا.',
   settingsFooter: 'يتحقق Argus من الإعدادات ويحفظها لهذا السيرفر.',
   quarantineRole: 'دور العزل',
+  botScreeningMode: 'فحص البوتات الجديدة',
+  botScreeningModeHelp: 'وضع غير الموثوقة يستثني البوتات الموجودة في قائمة Argus البيضاء لهذا السيرفر، وليس حسب علامة توثيق Discord. وضع كل البوتات يتجاوز الاستثناء. وضع المراقبة في Anti-Nuke يرسل تنبيهًا دون عزل.',
+  botScreeningOff: 'إيقاف',
+  botScreeningUntrusted: 'فحص البوتات غير الموثوقة فقط',
+  botScreeningAll: 'فحص كل بوت جديد',
+  confirmDisableBotScreening: 'هل تريد إيقاف فحص البوتات؟ ستنضم البوتات الجديدة دون عزل أو مراجعة من Argus.',
   settingsChannelUnavailable: 'القناة المحددة غير متاحة لـ Argus. اختر قناة يستطيع البوت استخدامها.',
   settingsRoleUnavailable: 'لا يستطيع Argus إدارة الدور المحدد بأمان. اختر دورًا مؤهلًا أسفل أعلى دور للبوت.',
   settingsEditor: 'إعدادات السيرفر',
   settingsOwnerOnly: 'تعديل هذه الإعدادات متاح لمالك السيرفر فقط.',
+  settingsReadOnlyAccess: 'يمكنك مراجعة إعدادات السيرفر، لكن لا يمكنك تغييرها.',
   settingsEditSummary: 'تُحفظ هذه القيم لدى Argus وتستخدمها وحدات الحماية.',
   settingsGeneralDescription: 'اللغة وسجل الأمان وتنبيهات المالك.',
   botLanguage: 'لغة ردود البوت',

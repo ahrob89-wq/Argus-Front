@@ -43,10 +43,10 @@ export default function LandingPage({ language, authenticated, onLanguageToggle,
   useEffect(() => {
     if (!featureCarousel?.autoplay) return;
     if (prefersReducedMotion) {
-      featureCarousel.autoplay.stop();
+      featureCarousel.autoplay.stop?.();
       return;
     }
-    const startTimer = window.setTimeout(() => featureCarousel.autoplay.start(), 700);
+    const startTimer = window.setTimeout(() => featureCarousel.autoplay?.start?.(), 700);
     return () => window.clearTimeout(startTimer);
   }, [featureCarousel, prefersReducedMotion]);
 
